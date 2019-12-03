@@ -34,18 +34,24 @@ void PP25SteppingAction::UserSteppingAction(const G4Step* step)
     
     // energy deposit
     auto edep = step->GetTotalEnergyDeposit();
+
+    // to do
+    // need to get the floor number
+    //
     
+    int iFloor;
+
     // step length
     G4double stepLength = 0.;
     if ( step->GetTrack()->GetDefinition()->GetPDGCharge() != 0. ) {
 	stepLength = step->GetStepLength();
     }
     
-    if ( volume == fDetConstruction->GetScintLayer0PV() ) {
+    if ( volume == fDetConstruction->GetScintLayer0PV(iFloor) ) {
 	fEventAction->AddEloss_TrackLength(0, edep,stepLength);
-    } else if (volume == fDetConstruction->GetScintLayer1PV()) {
+    } else if (volume == fDetConstruction->GetScintLayer1PV(iFloor)) {
 	fEventAction->AddEloss_TrackLength(1, edep,stepLength);
-    } else if (volume == fDetConstruction->GetScintLayer2PV()) {
+    } else if (volume == fDetConstruction->GetScintLayer2PV(iFloor)) {
 	fEventAction->AddEloss_TrackLength(2, edep,stepLength);
     }
 }

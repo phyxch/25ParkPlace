@@ -7,9 +7,13 @@
 // November 21, 2019: hexc and Zachary
 // fine tuning the building floor structure
 //
+// December 3, 2019: hexc and Zachary
+// Added telescope detector on each floor
+//
+
 #include "PP25DetectorConstruction.hh"
 
-#include "G4Material.hh"
+//#include "G4Material.hh"
 #include "G4NistManager.hh"
 
 #include "G4Box.hh"
@@ -40,11 +44,9 @@ G4GlobalMagFieldMessenger* PP25DetectorConstruction::fMagFieldMessenger = nullpt
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-PP25DetectorConstruction::PP25DetectorConstruction()
- : G4VUserDetectorConstruction(),
-   physScint0(nullptr), physScint1(nullptr), physScint2(nullptr),
-   fCheckOverlaps(true)
+PP25DetectorConstruction::PP25DetectorConstruction() : G4VUserDetectorConstruction()
 {
+    fCheckOverlaps = true;
     NbOfFloors = FLOOR_NUMBER;
 }
 
@@ -89,8 +91,8 @@ void PP25DetectorConstruction::DefineMaterials()
   new G4Material("liquidArgon", z=18., a= 39.95*g/mole, density= 1.390*g/cm3);
          // The argon by NIST Manager is a gas with a different density
 
-  // Copied from pINT simulation
-  G4Material* scintMat = new G4Material("scintillator", density= 1.032*g/cm3, ncomponents=2);
+                                                                                                                                         // Copied from pINT simulation
+  scintMat = new G4Material("scintillator", density= 1.032*g/cm3, ncomponents=2);
   scintMat->AddElement(C, natoms=10);
   scintMat->AddElement(H, natoms=11);
 
@@ -122,7 +124,7 @@ G4VPhysicalVolume* PP25DetectorConstruction::DefineVolumes()
     nofLayers = 3;
     
     // Define scintillator dimension
-    scintX  = scintY = 20.*cm;
+    scintX  = scintY = 15.*cm;
     scintZ = 1.0*cm;
 
     dist12 = 10.0*cm;
@@ -185,7 +187,7 @@ G4VPhysicalVolume* PP25DetectorConstruction::DefineVolumes()
     simpleBoxVisAtt->SetForceWireframe(false);
     simpleBoxVisAtt->SetForceSolid(true);
     
-    char Floor[8];
+    char Floor[8], Scint0[9], Scint1[9], Scint2[9];
     G4double floorHeight,  atmLayerHeight_prev;
     
     for (int iFloor = 0; iFloor < NbOfFloors; iFloor++) {
@@ -194,6 +196,23 @@ G4VPhysicalVolume* PP25DetectorConstruction::DefineVolumes()
 	floor_box.push_back(new G4Box(Floor, floorX/2.0, floorY/2.0, floorZ/2.0));
 	floor_logic.push_back(new G4LogicalVolume(floor_box[iFloor], floorMat, Floor));
 	floor_phys.push_back(new G4PVPlacement(0, G4ThreeVector(0, 0, floorHeight), Floor, floor_logic.at(iFloor), physWorld, false, 0));
+	
+	sprintf(Scint0, "Scint0%02d", iFloor);    // scintillator panel labeling:  ScintXYZ    X can be 0, 1, 2  and YZ can be 00, 01, .. 13.., for flooring
+	scint0_box.push_back(new G4Box(Scint0, scintX/2.0, scintY/2.0, scintZ/2.0));
+	scint0_logic.push_back(new G4LogicalVolume(scint0_box[iFloor], scintMat, Scint0));
+	scint0_phys.push_back(new G4PVPlacement(0, G4ThreeVector(0, 0, floorHeight - 2.0*m), Scint0, scint0_logic.at(iFloor), physWorld, false, 0));
+
+	sprintf(Scint1, "Scint1%02d", iFloor);
+	scint1_box.push_back(new G4Box(Scint1, scintX/2.0, scintY/2.0, scintZ/2.0));
+	scint1_logic.push_back(new G4LogicalVolume(scint1_box[iFloor], scintMat, Scint1));
+	scint1_phys.push_back(new G4PVPlacement(0, G4ThreeVector(0, 0, floorHeight - 2.0*m-10*cm), Scint1, scint1_logic.at(iFloor), physWorld, false, 0));
+
+	sprintf(Scint2, "Scint2%02d", iFloor);
+	scint2_box.push_back(new G4Box(Scint2, scintX/2.0, scintY/2.0, scintZ/2.0));
+	scint2_logic.push_back(new G4LogicalVolume(scint2_box[iFloor], scintMat, Scint2));
+	scint2_phys.push_back(new G4PVPlacement(0, G4ThreeVector(0, 0, floorHeight - 2.0*m-30*cm), Scint2, scint2_logic.at(iFloor), physWorld, false, 0));
+
+			     /*
 	if ( iFloor == 6) 
 	  {
 	      //
@@ -260,6 +279,7 @@ G4VPhysicalVolume* PP25DetectorConstruction::DefineVolumes()
 	      scintLayerLV2->SetVisAttributes(simpleBoxVisAtt);
 	      
 	  }
+			     */
   }
 
   
